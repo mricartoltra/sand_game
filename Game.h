@@ -6,7 +6,7 @@
 #include <iostream>
 #include <vector>
 
-class World{
+class Game{
     public:
         void run();
     private:
