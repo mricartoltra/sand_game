@@ -40,6 +40,5 @@ void World::update() {
 }
 
 const std::vector<std::vector<Uint32>>& World::getPixels() const {
-    std::vector<std::vector<Uint32>> prixels(height, std::vector<Uint32>(width, 0));
     return pixels;
 }

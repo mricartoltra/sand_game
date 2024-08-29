@@ -4,6 +4,8 @@
 #include <memory>
 #include <chrono>
 #include <thread>
+#include <cmath>
+#include <random>
 
 Game::Game(int screenWidth, int screenHeight)
     : screenWidth(screenWidth), screenHeight(screenHeight), 
@@ -39,25 +41,66 @@ bool Game::initialize() {
 void Game::run() {
     while (!quit) {
         handleEvents();
-        update();   
+        update();
         render();
-        std::this_thread::sleep_for(std::chrono::milliseconds(20));
+        //std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
 }
 
+struct Point {
+    int x;
+    int y;
+};
+
+std::vector<Point> generateFilledCirclePoints(int radius, int numPoints) {
+    std::vector<Point> points;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(-radius, radius);
+
+    while (points.size() < numPoints) {
+        int x = dis(gen);
+        int y = dis(gen);
+        if (x*x + y*y <= radius*radius) {
+            points.push_back({x, y});
+        }
+    }
+
+    return points;
+}
+
+
+
 void Game::handleEvents() {
     SDL_Event e;
+    int mouseX, mouseY;
+    uint32_t mouseState = SDL_GetMouseState(&mouseX, &mouseY);
+
     while (SDL_PollEvent(&e) != 0) {
         if (e.type == SDL_QUIT) {
             quit = true;
-        } else if (e.type == SDL_MOUSEBUTTONDOWN) {
-            int mouseX, mouseY;
-            SDL_GetMouseState(&mouseX, &mouseY);
-            if (e.button.button == SDL_BUTTON_LEFT) {
-                world.addParticle(std::make_unique<Sand>(mouseX, mouseY, &world));
-            } else if (e.button.button == SDL_BUTTON_RIGHT) {
-                world.addParticle(std::make_unique<Water>(mouseX, mouseY, &world));
-            }
+        }
+    }
+
+    // Check if left mouse button is held down
+    if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+        static std::vector<Point> filledCirclePoints = generateFilledCirclePoints(20, 1000);
+        
+        // Add particles at the current mouse position
+        for (const auto& point : filledCirclePoints) {
+            int particleX = mouseX + point.x;
+            int particleY = mouseY + point.y;
+            world.addParticle(std::make_unique<Sand>(particleX, particleY, &world));
+        }
+    }
+    if (mouseState & SDL_BUTTON(SDL_BUTTON_RIGHT)) {
+        static std::vector<Point> filledCirclePoints = generateFilledCirclePoints(20, 1000);
+        
+        // Add particles at the current mouse position
+        for (const auto& point : filledCirclePoints) {
+            int particleX = mouseX + point.x;
+            int particleY = mouseY + point.y;
+            world.addParticle(std::make_unique<Water>(particleX, particleY, &world));
         }
     }
 }
